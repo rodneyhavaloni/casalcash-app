@@ -20,7 +20,7 @@ export default function HomeScreen({ navigation }) {
   const [user, setUser] = useState(null);
   const [metasRows, setMetasRows] = useState([]);
   const [saldo, setSaldo] = useState(0);
-  const [gastosMes, setGastosMes] = useState(1280.4);
+  const [gastosMes, setGastosMes] = useState(0);
   const [gastosProxMes, setGastosProxMes] = useState(0);
   const [metasAtivas, setMetasAtivas] = useState(3);
   const [metasPct, setMetasPct] = useState(0);
@@ -351,7 +351,11 @@ export default function HomeScreen({ navigation }) {
         const rows = data || [];
         console.log('[Home] despesas mês carregadas:', rows.length);
         rows.forEach((row) => {
-          const val = Number(row?.valor_parcela ?? row?.valor_total ?? 0);
+          const vParc = Number(row?.valor_parcela);
+          const vTot = Number(row?.valor_total);
+          const val = (isFinite(vParc) && vParc > 0)
+            ? vParc
+            : (isFinite(vTot) && vTot > 0 ? vTot : 0);
           if (!isFinite(val) || val <= 0) return;
           totalMes += val;
           const nomeCat = catMap[String(row?.categoria)] || 'Outros';
