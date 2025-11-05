@@ -1,0 +1,2 @@
+export const SUPA_URL ='https://ciejgbrgnrapzrzrswjz.supabase.co';
+export const SUPA_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpZWpnYnJnbnJhcHpyenJzd2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyNjE1NTQsImV4cCI6MjA3NzgzNzU1NH0.W-NxN69X0wpZv8bcpMl-LbSx4Efdu4Uxqi37bhbZC74';
