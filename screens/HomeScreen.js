@@ -34,6 +34,8 @@ export default function HomeScreen({ navigation }) {
   const [tipoMap, setTipoMap] = useState({}); // id -> nome do tipo (coluna 'tipo')
   const [metodoMap, setMetodoMap] = useState({}); // id -> nome do método (coluna 'nome')
   const [debug, setDebug] = useState({ cats: 0, month: 0, recent: 0, lastError: null, supaUrl: '', user: '' });
+  // Tick de atualização para forçar recarregamentos quando a tela ganhar foco
+  const [refreshTick, setRefreshTick] = useState(0);
   const chartSize = Math.max(140, Math.min(220, screenWidth - 80));
   // Animação de entrada da tela e gráficos
   const enter = useSharedValue(0);
@@ -111,6 +113,8 @@ export default function HomeScreen({ navigation }) {
 
   useFocusEffect(
     React.useCallback(() => {
+      // Toda vez que a Home ganhar foco, incrementa o tick para recarregar dados
+      setRefreshTick((t) => t + 1);
       // Reinicia valores toda vez que a tela ganha foco
       enter.value = 0;
       chartsProgress.value = 0;
@@ -306,7 +310,7 @@ export default function HomeScreen({ navigation }) {
         setDebug((d) => ({ ...d, lastError: String(e?.message || e) }));
       }
     })();
-  }, []);
+  }, [refreshTick]);
 
   // Monta os gráficos (Pessoal e Compartilhada) a partir de Despesas (mês atual) agregando por categoria
   useEffect(() => {
@@ -375,7 +379,7 @@ export default function HomeScreen({ navigation }) {
           return Array.from(map.entries())
             .filter(([, v]) => v > 0)
             .sort((a, b) => b[1] - a[1])
-            .map(([name, value], idx) => ({
+            .map(([name, value]) => ({
               name,
               value,
               color: (categoryStyleByName[name]?.color) || '#E5E7EB',
@@ -400,7 +404,7 @@ export default function HomeScreen({ navigation }) {
         setDebug((d) => ({ ...d, lastError: String(e?.message || e) }));
       }
     })();
-  }, [catMap, tipoMap]);
+  }, [catMap, tipoMap, categoryStyleByName, refreshTick]);
 
   // Calcula gastos do próximo mês (considera parcelas programadas para cair no próximo mês)
   useEffect(() => {
@@ -474,7 +478,7 @@ export default function HomeScreen({ navigation }) {
         setGastosProxMes(0);
       }
     })();
-  }, []);
+  }, [refreshTick]);
 
   // Busca metas na tabela 'metas' e calcula:
   //  - Saldo total = SUM(saldo_avanco)
@@ -510,7 +514,7 @@ export default function HomeScreen({ navigation }) {
         setMetasRows([]);
       }
     })();
-  }, []);
+  }, [refreshTick]);
 
   // Dados do gráfico de Metas (Guardado vs Restante) - sem Hook, para evitar conflitos
   const metasChart = (() => {
@@ -578,7 +582,7 @@ export default function HomeScreen({ navigation }) {
         setDebug((d) => ({ ...d, lastError: String(e?.message || e) }));
       }
     })();
-  }, []);
+  }, [refreshTick]);
 
   const suggestion = getAISuggestion(gastosMes);
   const cardWidth = screenWidth - spacing.lg * 2; // largura útil dentro do Card
@@ -786,7 +790,7 @@ export default function HomeScreen({ navigation }) {
                         flexDirection: 'row',
                         alignItems: 'center',
                         alignSelf: 'flex-start',
-                        backgroundColor: p.color,
+                        backgroundColor: (categoryStyleByName[p.name]?.color) || p.color || '#E5E7EB',
                         borderRadius: radii.pill,
                         paddingVertical: 6,
                         paddingLeft: 14,
@@ -856,7 +860,7 @@ export default function HomeScreen({ navigation }) {
                         flexDirection: 'row',
                         alignItems: 'center',
                         alignSelf: 'flex-start',
-                        backgroundColor: p.color,
+                        backgroundColor: (categoryStyleByName[p.name]?.color) || p.color || '#E5E7EB',
                         borderRadius: radii.pill,
                         paddingVertical: 6,
                         paddingLeft: 14,
@@ -936,7 +940,7 @@ export default function HomeScreen({ navigation }) {
               {(recentItems && recentItems.length > 0 ? recentItems : [])
                 .map((item, idx) => {
                   const catName = catMap[String(item?.categoria)] || 'Outros';
-                  const color = categoryColorMap[catName] || colors.green;
+                  const color = (categoryStyleByName[catName]?.color) || categoryColorMap[catName] || '#9CA3AF';
                   const icon = (categoryStyleByName[catName]?.icon) || 'pricetag-outline';
                   return (
                     <Pressable

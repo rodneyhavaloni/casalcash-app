@@ -866,40 +866,89 @@ export default function AddItemScreen({ navigation }) {
             cardAnim,
           ]}
         >
-          {/* Categoria */}
+          {/* Categoria (Dropdown com ícone, nome e chip de cor) */}
           <Text style={{ color: '#6B7280', fontFamily: 'Poppins_500Medium' }}>Categoria</Text>
-          <View
-            style={{
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              marginTop: 8,
-              padding: step3CategoriaError ? 8 : 0,
-              borderWidth: step3CategoriaError ? 1 : 0,
-              borderColor: step3CategoriaError ? '#F43F5E' : 'transparent',
-              borderRadius: 12,
-            }}
-          >
-            {categorias.map((c) => {
-              const selected = Number(categoriaId) === Number(c.id);
-              const catColor = c?.cor || c?.color || getFixedColorForCategory(c?.nome || '');
-              const catIcon = c?.icone || c?.icon || pickCategoryIcon(c?.nome || '');
-              return (
-                <Chip
-                  key={c.id}
-                  label={c.nome}
-                  selected={selected}
-                  left={() => (
-                    <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: catColor, alignItems: 'center', justifyContent: 'center' }}>
-                      <Ionicons name={catIcon} size={12} color="#FFFFFF" />
+          {(() => {
+            const sel = categorias.find((c) => Number(categoriaId) === Number(c.id));
+            const selectedColor = sel?.cor || sel?.color || (sel ? getFixedColorForCategory(sel?.nome || '') : '#FFFFFF');
+            const selectedIcon = sel?.icone || sel?.icon || (sel ? pickCategoryIcon(sel?.nome || '') : 'pricetag-outline');
+            return (
+              <View style={{ marginTop: 8 }}>
+                <Pressable
+                  onPress={() => setCategoriesExpanded((v) => !v)}
+                  android_ripple={{ color: '#E5E7EB' }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Selecionar categoria"
+                  style={({ pressed, hovered }) => ([
+                    {
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: step3CategoriaError ? '#F43F5E' : (sel ? colors.green : '#E5E7EB'),
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    },
+                    hovered && Platform.OS === 'web' && { transform: [{ translateY: -1 }], elevation: 2 },
+                    pressed && { transform: [{ scale: 0.98 }], opacity: 0.96 },
+                  ])}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: selectedColor, alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name={selectedIcon} size={16} color={'#FFFFFF'} />
                     </View>
-                  )}
-                  style={{ backgroundColor: catColor, borderColor: catColor }}
-                  textStyle={{ color: '#FFFFFF' }}
-                  onPress={() => setCategoriaId(c.id)}
-                />
-              );
-            })}
-          </View>
+                    <Text style={{ marginLeft: 10, color: colors.text, fontFamily: 'Poppins_500Medium', flexShrink: 1 }} numberOfLines={1}>
+                      {sel?.nome || 'Selecione uma categoria'}
+                    </Text>
+                    {!!sel && (
+                      <View style={{ marginLeft: 10, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999, backgroundColor: selectedColor }} />
+                    )}
+                  </View>
+                  <Ionicons name={categoriesExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={'#9CA3AF'} />
+                </Pressable>
+
+                {categoriesExpanded && (
+                  <View style={{ marginTop: 8, backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB' }}>
+                    {categorias.map((c) => {
+                      const selected = Number(categoriaId) === Number(c.id);
+                      const catColor = c?.cor || c?.color || getFixedColorForCategory(c?.nome || '');
+                      const catIcon = c?.icone || c?.icon || pickCategoryIcon(c?.nome || '');
+                      return (
+                        <Pressable
+                          key={c.id}
+                          onPress={() => { setCategoriaId(c.id); setCategoriesExpanded(false); }}
+                          android_ripple={{ color: selected ? '#A7F3D0' : '#E5E7EB' }}
+                          style={({ pressed }) => ([
+                            {
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              paddingHorizontal: 12,
+                              paddingVertical: 10,
+                              borderBottomWidth: 1,
+                              borderBottomColor: '#F3F4F6',
+                              backgroundColor: selected ? '#ECFDF5' : '#FFFFFF',
+                            },
+                            pressed && { opacity: 0.96 },
+                          ])}
+                        >
+                          <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: catColor, alignItems: 'center', justifyContent: 'center' }}>
+                            <Ionicons name={catIcon} size={14} color={'#FFFFFF'} />
+                          </View>
+                          <Text style={{ marginLeft: 10, color: colors.text, fontFamily: 'Poppins_400Regular', flex: 1 }} numberOfLines={1}>{c.nome}</Text>
+                          <View style={{ paddingHorizontal: 10 }}>
+                            <View style={{ width: 28, height: 12, borderRadius: 999, backgroundColor: catColor, borderWidth: selected ? 1 : 0, borderColor: selected ? colors.greenDark : 'transparent' }} />
+                          </View>
+                          {selected && <Ionicons name="checkmark" size={16} color={colors.greenDark} />}
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                )}
+              </View>
+            );
+          })()}
           {!!step3CategoriaError && <Text style={errorTextStyle}>{step3CategoriaError}</Text>}
 
           {/* Tipo de despesa */}
