@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Alert, ScrollView } from 'react-native';
+import { View, Text, Pressable, Alert, ScrollView } from 'react-native';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import Clickable from '../components/Clickable';
 import { supabase } from '../services/supabaseClient';
 import styles from '../styles/screens/AddItemScreen.style';
 
@@ -138,15 +137,18 @@ export default function AddItemScreen({ navigation }) {
           {categorias.map((c) => {
             const selected = categoriaId === c.id;
             return (
-              <Clickable
+              <Pressable
                 key={String(c.id)}
-                style={[styles.chip, selected && styles.chipSelected]}
                 onPress={() => setCategoriaId(c.id)}
-                androidRippleColor="#E5E7EB"
-                accessibilityRole="button"
+                android_ripple={{ color: '#E5E7EB' }}
+                style={({ pressed }) => ([
+                  styles.chip,
+                  selected && styles.chipSelected,
+                  pressed && { opacity: 0.9 },
+                ])}
               >
                 <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>{c.nome}</Text>
-              </Clickable>
+              </Pressable>
             );
           })}
         </View>

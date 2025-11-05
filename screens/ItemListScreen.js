@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, RefreshControl } from 'react-native';
+import { View, Text, FlatList, RefreshControl, Pressable, Platform } from 'react-native';
 import { colors, spacing } from '../components/theme';
 import styles from '../styles/screens/ItemListScreen.style';
 import { supabase } from '../services/supabaseClient';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import Clickable from '../components/Clickable';
 
 function Row({ item, catMap }) {
   const navigation = useNavigation();
@@ -15,9 +14,9 @@ function Row({ item, catMap }) {
     return parts.length === 3 ? `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}` : String(d);
   };
   return (
-    <Clickable
+    <Pressable
       onPress={() => navigation.navigate('ItemDetail', { id: item.id, item })}
-      androidRippleColor="#C7E7D1"
+      android_ripple={{ color: '#C7E7D1' }}
       accessibilityRole="button"
       style={({ pressed, hovered }) => ([
         { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
@@ -26,6 +25,7 @@ function Row({ item, catMap }) {
           borderLeftWidth: 3,
           borderLeftColor: colors.green,
         },
+        Platform.OS === 'web' && { cursor: 'pointer' },
       ])}
       hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
     >
@@ -44,7 +44,7 @@ function Row({ item, catMap }) {
         <Text style={{ color: colors.muted, fontFamily: 'Poppins_400Regular' }}>Pagamento: {item?.metodo_pagamento != null ? `#${item.metodo_pagamento}` : '—'}</Text>
         <Text style={{ color: colors.muted, fontFamily: 'Poppins_400Regular' }}>Criado por: {item?.created_by || '—'}</Text>
       </View>
-    </Clickable>
+    </Pressable>
   );
 }
 

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Dimensions, Platform, Vibration } from 'react-native';
-import Clickable from '../components/Clickable';
+import { View, Text, ScrollView, Dimensions, Pressable, Platform, Vibration } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
@@ -642,54 +641,62 @@ export default function HomeScreen({ navigation }) {
   <Animated.ScrollView contentContainerStyle={styles.content} style={contentAnim}>
         <View style={styles.grid}>
           <View style={styles.gridItem}>
-            <Clickable
+            <Pressable
               onPress={() => navigation.navigate('DebtProjection', { scope: 'current-month' })}
-              androidRippleColor="#E5E7EB"
+              android_ripple={{ color: '#D1FAE5' }}
               accessibilityRole="button"
               accessibilityLabel="Abrir projeção de dívidas do mês atual"
+              style={({ pressed }) => ([ pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] } ])}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
               <Card title="Mês atual" right={<Ionicons name="trending-up" size={20} color={colors.salmonDark} />}>
                   <Text style={[styles.value, { color: colors.salmonDark }]}>{fmtCurrency(animGastosMes)}</Text>
               </Card>
-            </Clickable>
+            </Pressable>
           </View>
           <View style={styles.gridItem}>
-            <Clickable
+            <Pressable
               onPress={() => navigation.navigate('DebtProjection', { scope: 'next-month' })}
-              androidRippleColor="#E5E7EB"
+              android_ripple={{ color: '#D1FAE5' }}
               accessibilityRole="button"
               accessibilityLabel="Abrir projeção de dívidas do próximo mês"
+              style={({ pressed }) => ([ pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] } ])}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
               <Card title="Próximo mês" right={<Ionicons name="calendar-outline" size={20} color={colors.salmonDark} />}>
                   <Text style={[styles.value, { color: colors.salmonDark }]}>{fmtCurrency(animGastosProxMes)}</Text>
               </Card>
-            </Clickable>
+            </Pressable>
           </View>
         </View>
         <View style={styles.grid}>
           <View style={styles.gridItem}>
-            <Clickable
+            <Pressable
               onPress={() => navigation.navigate('GoalsDashboard', { from: 'saldo' })}
-              androidRippleColor="#E5E7EB"
+              android_ripple={{ color: '#D1FAE5' }}
               accessibilityRole="button"
               accessibilityLabel="Abrir dashboard de metas a partir do saldo total"
+              style={({ pressed }) => ([ pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] } ])}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
               <Card title="Saldo total" right={<Ionicons name="wallet" size={20} color={colors.greenDark} />}>
                 <Text style={styles.value}>{fmtCurrencyAdaptive(animSaldo)}</Text>
               </Card>
-            </Clickable>
+            </Pressable>
           </View>
           <View style={styles.gridItem}>
-            <Clickable
+            <Pressable
               onPress={() => navigation.navigate('GoalsDashboard', { from: 'metas' })}
-              androidRippleColor="#E5E7EB"
+              android_ripple={{ color: '#D1FAE5' }}
               accessibilityRole="button"
               accessibilityLabel="Abrir dashboard de metas"
+              style={({ pressed }) => ([ pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] } ])}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
               <Card title="Metas" right={<Ionicons name="stats-chart" size={20} color={colors.greenDark} />}>
                 <Text style={[styles.value, { color: colors.greenDark }]}>{fmtPercent(animMetasPct)}</Text>
               </Card>
-            </Clickable>
+            </Pressable>
           </View>
         </View>
 
@@ -707,13 +714,17 @@ export default function HomeScreen({ navigation }) {
                 const showInlineInRest = restPct > 0.12; // mostra % dentro da área cinza quando houver espaço
                 const goalId = metasRows?.[i]?.id;
                 return (
-                  <Clickable
+                  <Pressable
                     key={`${label}-${i}`}
                     onPress={() => navigation.navigate('Metas', { goalId, goalName: label })}
-                    androidRippleColor="#E5E7EB"
+                    android_ripple={{ color: '#D1FAE5' }}
                     accessibilityRole="button"
                     accessibilityLabel={`Abrir meta ${label}`}
-                    style={{ marginBottom: 12 }}
+                    style={({ pressed }) => ([
+                      { marginBottom: 12, borderRadius: 8 },
+                      pressed && { opacity: 0.96, backgroundColor: '#ECFDF5', padding: 4 },
+                    ])}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                   >
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
                       <Text style={{ color: colors.text, fontFamily: 'Poppins_500Medium' }} numberOfLines={1}>{label}</Text>
@@ -737,7 +748,7 @@ export default function HomeScreen({ navigation }) {
                         <Text style={{ color: colors.green, fontFamily: 'Poppins_400Regular', marginLeft: 4 }}>guardado</Text>
                       </View>
                     )}
-                  </Clickable>
+                  </Pressable>
                 );
               })}
             </View>
@@ -752,11 +763,11 @@ export default function HomeScreen({ navigation }) {
             <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 }}>
               <View style={{ flex: 1, paddingRight: 12 }}>
                 {pieDataPessoal.map((p, idx) => (
-                  <Clickable
+                  <Pressable
                     key={`${p.name}-${idx}`}
                     onPress={() => navigation.navigate('Itens', { filterCategoryName: p.name })}
-                    androidRippleColor="#00000022"
-                    style={[
+                    android_ripple={{ color: '#00000022' }}
+                    style={({ pressed }) => ([
                       {
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -768,15 +779,23 @@ export default function HomeScreen({ navigation }) {
                         paddingRight: 10,
                         marginBottom: 8,
                       },
-                    ]}
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] },
+                    ])}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                   >
                     <Ionicons name={pickCategoryIcon(p.name)} size={14} color={'#FFFFFF'} />
                     <Text style={{ marginLeft: 6, color: '#FFFFFF', fontFamily: 'Poppins_400Regular' }}>{p.name}</Text>
-                  </Clickable>
+                  </Pressable>
                 ))}
               </View>
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingLeft: 12 }}>
-                <Clickable onPress={() => navigation.navigate('Itens')} androidRippleColor="#E5E7EB">
+                <Pressable
+                  onPress={() => navigation.navigate('Itens')}
+                  android_ripple={{ color: '#D1FAE5' }}
+                  accessibilityRole="button"
+                  style={({ pressed }) => ([ pressed && { opacity: 0.95, transform: [{ scale: 0.97 }] } ])}
+                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                >
                 <PieChart
                   data={pieDataPessoal.map(p => ({ name: p.name, population: p.value, color: p.color, legendFontColor: p.legendFontColor, legendFontSize: p.legendFontSize }))}
                   width={sideChartSize}
@@ -796,7 +815,7 @@ export default function HomeScreen({ navigation }) {
                   center={[12, 0]}
                   style={{ overflow: 'visible', alignSelf: 'center', marginLeft: 4 }}
                 />
-                </Clickable>
+                </Pressable>
               </View>
             </View>
           ) : (
@@ -814,11 +833,11 @@ export default function HomeScreen({ navigation }) {
             <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 }}>
               <View style={{ flex: 1, paddingRight: 12 }}>
                 {pieDataCompart.map((p, idx) => (
-                  <Clickable
+                  <Pressable
                     key={`${p.name}-${idx}`}
                     onPress={() => navigation.navigate('Itens', { filterCategoryName: p.name })}
-                    androidRippleColor="#00000022"
-                    style={[
+                    android_ripple={{ color: '#00000022' }}
+                    style={({ pressed }) => ([
                       {
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -830,15 +849,23 @@ export default function HomeScreen({ navigation }) {
                         paddingRight: 10,
                         marginBottom: 8,
                       },
-                    ]}
+                      pressed && { opacity: 0.9, transform: [{ scale: 0.96 }] },
+                    ])}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                   >
                     <Ionicons name={pickCategoryIcon(p.name)} size={14} color={'#FFFFFF'} />
                     <Text style={{ marginLeft: 6, color: '#FFFFFF', fontFamily: 'Poppins_400Regular' }}>{p.name}</Text>
-                  </Clickable>
+                  </Pressable>
                 ))}
               </View>
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingLeft: 12 }}>
-                <Clickable onPress={() => navigation.navigate('Itens')} androidRippleColor="#E5E7EB">
+                <Pressable
+                  onPress={() => navigation.navigate('Itens')}
+                  android_ripple={{ color: '#D1FAE5' }}
+                  accessibilityRole="button"
+                  style={({ pressed }) => ([ pressed && { opacity: 0.95, transform: [{ scale: 0.97 }] } ])}
+                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                >
                 <PieChart
                   data={pieDataCompart.map(p => ({ name: p.name, population: p.value, color: p.color, legendFontColor: p.legendFontColor, legendFontSize: p.legendFontSize }))}
                   width={sideChartSize}
@@ -858,7 +885,7 @@ export default function HomeScreen({ navigation }) {
                   center={[12, 0]}
                   style={{ overflow: 'visible', alignSelf: 'center', marginLeft: 4 }}
                 />
-                </Clickable>
+                </Pressable>
               </View>
             </View>
           ) : (
@@ -898,19 +925,20 @@ export default function HomeScreen({ navigation }) {
                   const color = categoryColorMap[catName] || colors.green;
                   const icon = pickCategoryIcon(catName);
                   return (
-                    <Clickable
+                    <Pressable
                       key={item.id || idx}
                       onPressIn={triggerHaptic}
                       onPress={() => navigation.navigate('ItemDetail', { id: item.id, item })}
                       accessibilityRole="button"
                       accessibilityLabel={`Abrir detalhes da despesa ${item?.nome || item?.descricao || item?.id}`}
-                      androidRippleColor="#C7E7D1"
+                      android_ripple={{ color: '#86EFAC', foreground: false }}
                       style={({ pressed, hovered }) => ([
                         { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
                         (pressed || hovered) && {
-                          backgroundColor: '#F0FDF4', // verde bem claro
-                          borderLeftWidth: 3,
+                          backgroundColor: '#DCFCE7', // verde mais visível
+                          borderLeftWidth: 4,
                           borderLeftColor: colors.green,
+                          transform: [{ scale: 0.992 }],
                         },
                         Platform.OS === 'web' && { cursor: 'pointer' },
                       ])}
@@ -974,7 +1002,7 @@ export default function HomeScreen({ navigation }) {
                       <Text style={{ width: colW, paddingHorizontal: spacing.sm, color: colors.text, fontFamily: 'Poppins_400Regular' }} numberOfLines={1}>
                         {item?.created_by ? String(item.created_by) : '—'}
                       </Text>
-                    </Clickable>
+                    </Pressable>
                   );
                 })}
 

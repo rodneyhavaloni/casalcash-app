@@ -3,8 +3,7 @@ import { NavigationContainer, DefaultTheme, useNavigation } from '@react-navigat
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Platform } from 'react-native';
-import Clickable from '../components/Clickable';
+import { Pressable, View, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import AuthRoutes from './auth';
@@ -32,10 +31,10 @@ function Tabs() {
   const insets = useSafeAreaInsets();
 
   const AddTabButton = (props) => (
-    <Clickable
+    <Pressable
       {...props}
       onPress={() => navigation.navigate('AddItem')}
-      androidRippleColor="#ffffff55"
+      android_ripple={{ color: '#ffffff55' }}
       accessibilityRole="button"
       style={({ pressed }) => ([
         {
@@ -43,7 +42,7 @@ function Tabs() {
           justifyContent: 'center',
           alignItems: 'center',
         },
-        { transform: [{ scale: pressed ? 0.96 : 1 }] },
+        pressed && { transform: [{ scale: 0.96 }] },
       ])}
     >
       <View
@@ -65,7 +64,7 @@ function Tabs() {
           <Ionicons name="add" size={30} color="#fff" />
         </View>
       </View>
-    </Clickable>
+    </Pressable>
   );
 
   const EmptyScreen = () => null;

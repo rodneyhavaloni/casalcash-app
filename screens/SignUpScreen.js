@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, Alert } from 'react-native';
+import { View, Text, Alert, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Input from '../components/Input';
-import Clickable from '../components/Clickable';
 import Button from '../components/Button';
 import { colors, spacing } from '../components/theme';
 import styles from '../styles/screens/SignUpScreen.style';
@@ -39,19 +38,19 @@ export default function SignUpScreen({ navigation }) {
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
           right={
-            <Clickable
+            <Pressable
               onPress={() => setShowPassword((v) => !v)}
-              accessibilityRole="button"
-              androidRippleColor="#E5E7EB"
+              android_ripple={{ color: '#E5E7EB' }}
               style={({ pressed }) => ([
                 { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
                 pressed ? { backgroundColor: '#F3F4F6' } : null,
               ])}
+              accessibilityRole="button"
             >
               <Text style={{ color: colors.muted, fontFamily: 'Poppins_400Regular' }}>
                 {showPassword ? 'Ocultar' : 'Mostrar'}
               </Text>
-            </Clickable>
+            </Pressable>
           }
         />
         <View style={{ height: 8 }} />

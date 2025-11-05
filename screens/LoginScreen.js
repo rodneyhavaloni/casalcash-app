@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, Image, Linking, Alert } from 'react-native';
+import { View, Text, Image, Linking, Alert, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '../components/Button';
-import Clickable from '../components/Clickable';
 import Input from '../components/Input';
 import { colors, spacing, typography } from '../components/theme';
 import { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword } from '../services/supabaseClient';
@@ -87,19 +86,19 @@ export default function LoginScreen({ navigation }) {
           value={password}
           onChangeText={setPassword}
           right={
-            <Clickable
+            <Pressable
               onPress={() => setShowPassword((v) => !v)}
-              accessibilityRole="button"
-              androidRippleColor="#E5E7EB"
+              android_ripple={{ color: '#E5E7EB' }}
               style={({ pressed }) => ([
                 { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
                 pressed ? { backgroundColor: '#F3F4F6' } : null,
               ])}
+              accessibilityRole="button"
             >
               <Text style={{ color: colors.muted, fontFamily: 'Poppins_400Regular' }}>
                 {showPassword ? 'Ocultar' : 'Mostrar'}
               </Text>
-            </Clickable>
+            </Pressable>
           }
         />
 
