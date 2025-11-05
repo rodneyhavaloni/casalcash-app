@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer, DefaultTheme, useNavigation } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, useNavigation, useNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,11 +10,14 @@ import AuthRoutes from './auth';
 import HomeScreen from '../screens/HomeScreen';
 import ItemListScreen from '../screens/ItemListScreen';
 import GoalsScreen from '../screens/GoalsScreen';
+import CreateGoalsScreen from '../screens/CreateGoalsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AddItemScreen from '../screens/AddItemScreen';
 import ItemDetailScreen from '../screens/ItemDetailScreen';
 import DebtProjectionScreen from '../screens/DebtProjectionScreen';
 import GoalsDashboardScreen from '../screens/GoalsDashboardScreen';
+import CreateChooserScreen from '../screens/CreateChooserScreen';
+import CreateCategoryScreen from '../screens/CreateCategoryScreen';
 import { colors } from '../constants/theme';
 
 const Stack = createNativeStackNavigator();
@@ -33,16 +36,17 @@ function Tabs() {
   const AddTabButton = (props) => (
     <Pressable
       {...props}
-      onPress={() => navigation.navigate('AddItem')}
-      android_ripple={{ color: '#ffffff55' }}
+      onPress={() => navigation.navigate('CreateChooser')}
+      android_ripple={{ color: '#FECACA' }}
       accessibilityRole="button"
-      style={({ pressed }) => ([
+      style={({ pressed, hovered }) => ([
         {
           top: isIOS ? -24 : -26,
           justifyContent: 'center',
           alignItems: 'center',
         },
-        pressed && { transform: [{ scale: 0.96 }] },
+        hovered && Platform.OS === 'web' && { transform: [{ translateY: -1 }], elevation: 8 },
+        pressed && { transform: [{ scale: 0.96 }, { translateY: 1 }], opacity: 0.95 },
       ])}
     >
       <View
@@ -54,8 +58,8 @@ function Tabs() {
           borderWidth: 4,
           borderColor: colors.background,
           shadowColor: '#000',
-          shadowOpacity: 0.15,
-          shadowRadius: 6,
+          shadowOpacity: 0.18,
+          shadowRadius: 8,
           shadowOffset: { width: 0, height: 3 },
           elevation: 6,
         }}
@@ -106,7 +110,7 @@ function Tabs() {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
-            navigation.navigate('AddItem');
+            navigation.navigate('CreateChooser');
           },
         })}
       />
@@ -117,8 +121,32 @@ function Tabs() {
 }
 
 export default function Routes({ session }) {
+  const navigationRef = useNavigationContainerRef();
+  const routeNameRef = React.useRef();
+
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer
+      theme={navTheme}
+      ref={navigationRef}
+      onReady={() => {
+        const current = navigationRef.getCurrentRoute();
+        routeNameRef.current = current?.name;
+        console.log(`[NAV] ready -> ${current?.name || 'unknown'}`);
+      }}
+      onStateChange={() => {
+        const previous = routeNameRef.current;
+        const current = navigationRef.getCurrentRoute();
+        const now = new Date().toISOString();
+        if (current) {
+          try {
+            console.log(`[NAV] ${now} ${previous || '-'} -> ${current.name}`, current.params || {});
+          } catch (e) {
+            console.log(`[NAV] ${now} ${previous || '-'} -> ${current?.name}`);
+          }
+          routeNameRef.current = current.name;
+        }
+      }}
+    >
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!session ? (
           <Stack.Screen name="Auth" component={AuthRoutes} />
@@ -126,6 +154,9 @@ export default function Routes({ session }) {
           <>
             <Stack.Screen name="Tabs" component={Tabs} />
             <Stack.Screen name="AddItem" component={AddItemScreen} />
+            <Stack.Screen name="CreateChooser" component={CreateChooserScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="CreateGoals" component={CreateGoalsScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="CreateCategory" component={CreateCategoryScreen} options={{ headerShown: false }} />
             <Stack.Screen name="ItemDetail" component={ItemDetailScreen} options={{ headerShown: true, title: 'Detalhes' }} />
             <Stack.Screen name="DebtProjection" component={DebtProjectionScreen} options={{ headerShown: true, title: 'Projeção de Dívidas' }} />
             <Stack.Screen name="GoalsDashboard" component={GoalsDashboardScreen} options={{ headerShown: true, title: 'Dashboard de Metas' }} />

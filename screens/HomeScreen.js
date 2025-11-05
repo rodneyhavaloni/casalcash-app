@@ -10,7 +10,7 @@ import { colors, spacing, typography, radii } from '../components/theme';
 import styles from '../styles/screens/HomeScreen.style';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
-import { pickPastel, pastelColors } from '../constants/charts';
+// Cancelamos predefinição de ícones/cores para categorias: passamos a usar o que vier do banco (Categoria.cor/icone)
 import { supabase } from '../services/supabaseClient';
 import { getAISuggestion } from '../utils/aiSuggestions';
 const screenWidth = Dimensions.get('window').width;
@@ -136,7 +136,7 @@ export default function HomeScreen({ navigation }) {
         return () => req && cancelAnimationFrame(req);
       };
 
-      const t = setTimeout(() => {
+  const t = setTimeout(() => {
         enter.value = withTiming(1, { duration: 650, easing: Easing.out(Easing.cubic) });
         chartsProgress.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.cubic), delay: 200 });
 
@@ -157,7 +157,7 @@ export default function HomeScreen({ navigation }) {
         clearTimeout(t);
         focusCleanup.cancels.forEach((c) => c && c());
       };
-    }, [])
+    }, [gastosMes, gastosProxMes, saldo, metasPct])
   );
 
   // Reage a mudanças reais dos valores base (quando chegam do Supabase) animando até o novo alvo
@@ -189,20 +189,7 @@ export default function HomeScreen({ navigation }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metasPct]);
 
-  // Heurística de ícones por categoria
-  const pickCategoryIcon = (name = '') => {
-    const n = String(name).toLowerCase();
-    if (/aliment|mercad|supermerc/.test(n)) return 'fast-food-outline';
-    if (/casa|aluguel|moradi|condom|luz|água|agua|energia/.test(n)) return 'home-outline';
-    if (/transp|uber|car|combust|gasolina|ipva|estac/.test(n)) return 'car-outline';
-    if (/saúde|saude|farm|méd|med|consulta|plano/.test(n)) return 'medkit-outline';
-    if (/educa|curso|facul|escola|livro/.test(n)) return 'school-outline';
-    if (/lazer|entreten|cinema|bar|resta|viag|passeio/.test(n)) return 'happy-outline';
-    if (/assin|stream|netflix|spotify|prime|hbo/.test(n)) return 'play-circle-outline';
-    if (/imposto|taxa|tarifa|banco|juros|multa/.test(n)) return 'cash-outline';
-    if (/roupa|vestu|calc|camis|tenis|sapato/.test(n)) return 'shirt-outline';
-    return 'pricetag-outline';
-  };
+  // Ícone/Cor agora são definidos pelo usuário ao criar a categoria; sem heurísticas aqui
 
   // Autenticação (carrega usuário)
   useEffect(() => {
@@ -292,24 +279,30 @@ export default function HomeScreen({ navigation }) {
     })();
   }, []);
 
-  // Carrega categorias e monta mapa id->nome
+  // Carrega categorias e monta mapa id->nome e nome->cor/icone (preferindo dados do banco)
   useEffect(() => {
     (async () => {
       try {
-        let res = await supabase.from('categoria').select('id, nome');
+        let res = await supabase.from('categoria').select('id, nome, cor, icone');
         if (res.error) {
-          res = await supabase.from('Categoria').select('id, nome');
+          res = await supabase.from('Categoria').select('id, nome, cor, icone');
         }
         if (res.error) throw res.error;
         const map = {};
+        const styleByName = {};
         (res.data || []).forEach((c) => {
           map[String(c.id)] = c.nome;
+          const color = c.cor || c.color || null;
+          const icon = c.icone || c.icon || null;
+          if (c.nome) styleByName[String(c.nome)] = { color, icon };
         });
         setCatMap(map);
+        setCategoryStyleByName(styleByName);
         setDebug((d) => ({ ...d, cats: (res.data || []).length }));
       } catch (e) {
         console.warn('Falha ao carregar categorias:', e?.message || e);
         setCatMap({});
+        setCategoryStyleByName({});
         setDebug((d) => ({ ...d, lastError: String(e?.message || e) }));
       }
     })();
@@ -385,7 +378,7 @@ export default function HomeScreen({ navigation }) {
             .map(([name, value], idx) => ({
               name,
               value,
-              color: getFixedColorForCategory(name),
+              color: (categoryStyleByName[name]?.color) || '#E5E7EB',
               legendFontColor: colors.text,
               legendFontSize: 12,
             }));
@@ -555,39 +548,8 @@ export default function HomeScreen({ navigation }) {
     Outros: 'pricetag-outline',
   };
 
-  // Cores fixas por categoria
-  const normalize = (s = '') =>
-    String(s)
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim();
-
-  const fixedCategoryColors = {
-    alimentacao: '#D97706', // amarelo/âmbar mais escuro para melhor contraste
-    casa: '#BAE1FF', // azul claro
-    transporte: '#FFB3BA', // rosa claro avermelhado
-    saude: '#BAFFC9', // verde menta
-    educacao: '#E5D1FA', // lilás
-    lazer: '#F8C8DC', // rosa bebê
-    assinaturas: '#C9F0FF', // azul gelo
-    impostos: '#FCE2DB', // salmão claro
-    roupas: '#C4FCEF', // verde água
-    outros: '#FFDFBA', // pêssego
-  };
-
-  const hashToIndex = (str, mod) => {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
-    return h % mod;
-  };
-
-  const getFixedColorForCategory = (name = '') => {
-    const key = normalize(name);
-    if (fixedCategoryColors[key]) return fixedCategoryColors[key];
-    const idx = hashToIndex(key, pastelColors.length);
-    return pastelColors[idx] || pickPastel(idx);
-  };
+  // Estado com estilo por nome de categoria obtido do banco
+  const [categoryStyleByName, setCategoryStyleByName] = useState({});
 
   useEffect(() => {
     (async () => {
@@ -647,11 +609,23 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.gridItem}>
             <Pressable
               onPress={() => navigation.navigate('DebtProjection', { scope: 'current-month' })}
-              android_ripple={{ color: '#D1FAE5' }}
+              android_ripple={{ color: '#BBF7D0' }}
               accessibilityRole="button"
               accessibilityLabel="Abrir projeção de dívidas do mês atual"
-              style={({ pressed }) => ([ pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] } ])}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              style={({ pressed, hovered }) => ([
+                hovered && Platform.OS === 'web' && { transform: [{ translateY: -1 }], elevation: 6 },
+                pressed && {
+                  opacity: 0.95,
+                  transform: [{ scale: 0.96 }, { translateY: 1 }],
+                  shadowColor: '#000',
+                  shadowOpacity: 0.12,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 4 },
+                  elevation: 6,
+                  borderRadius: 16,
+                },
+              ])}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Card title="Mês atual" right={<Ionicons name="trending-up" size={20} color={colors.salmonDark} />}>
                   <Text style={[styles.value, { color: colors.salmonDark }]}>{fmtCurrency(animGastosMes)}</Text>
@@ -661,11 +635,23 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.gridItem}>
             <Pressable
               onPress={() => navigation.navigate('DebtProjection', { scope: 'next-month' })}
-              android_ripple={{ color: '#D1FAE5' }}
+              android_ripple={{ color: '#BBF7D0' }}
               accessibilityRole="button"
               accessibilityLabel="Abrir projeção de dívidas do próximo mês"
-              style={({ pressed }) => ([ pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] } ])}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              style={({ pressed, hovered }) => ([
+                hovered && Platform.OS === 'web' && { transform: [{ translateY: -1 }], elevation: 6 },
+                pressed && {
+                  opacity: 0.95,
+                  transform: [{ scale: 0.96 }, { translateY: 1 }],
+                  shadowColor: '#000',
+                  shadowOpacity: 0.12,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 4 },
+                  elevation: 6,
+                  borderRadius: 16,
+                },
+              ])}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Card title="Próximo mês" right={<Ionicons name="calendar-outline" size={20} color={colors.salmonDark} />}>
                   <Text style={[styles.value, { color: colors.salmonDark }]}>{fmtCurrency(animGastosProxMes)}</Text>
@@ -677,11 +663,23 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.gridItem}>
             <Pressable
               onPress={() => navigation.navigate('GoalsDashboard', { from: 'saldo' })}
-              android_ripple={{ color: '#D1FAE5' }}
+              android_ripple={{ color: '#BBF7D0' }}
               accessibilityRole="button"
               accessibilityLabel="Abrir dashboard de metas a partir do saldo total"
-              style={({ pressed }) => ([ pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] } ])}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              style={({ pressed, hovered }) => ([
+                hovered && Platform.OS === 'web' && { transform: [{ translateY: -1 }], elevation: 6 },
+                pressed && {
+                  opacity: 0.95,
+                  transform: [{ scale: 0.96 }, { translateY: 1 }],
+                  shadowColor: '#000',
+                  shadowOpacity: 0.12,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 4 },
+                  elevation: 6,
+                  borderRadius: 16,
+                },
+              ])}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Card title="Saldo total" right={<Ionicons name="wallet" size={20} color={colors.greenDark} />}>
                 <Text style={styles.value}>{fmtCurrencyAdaptive(animSaldo)}</Text>
@@ -691,13 +689,25 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.gridItem}>
             <Pressable
               onPress={() => navigation.navigate('GoalsDashboard', { from: 'metas' })}
-              android_ripple={{ color: '#D1FAE5' }}
+              android_ripple={{ color: '#BBF7D0' }}
               accessibilityRole="button"
               accessibilityLabel="Abrir dashboard de metas"
-              style={({ pressed }) => ([ pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] } ])}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              style={({ pressed, hovered }) => ([
+                hovered && Platform.OS === 'web' && { transform: [{ translateY: -1 }], elevation: 6 },
+                pressed && {
+                  opacity: 0.95,
+                  transform: [{ scale: 0.96 }, { translateY: 1 }],
+                  shadowColor: '#000',
+                  shadowOpacity: 0.12,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 4 },
+                  elevation: 6,
+                  borderRadius: 16,
+                },
+              ])}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Card title="Metas" right={<Ionicons name="stats-chart" size={20} color={colors.greenDark} />}>
+              <Card title="Metas" right={<Ionicons name="trophy" size={20} color={colors.greenDark} />}>
                 <Text style={[styles.value, { color: colors.greenDark }]}>{fmtPercent(animMetasPct)}</Text>
               </Card>
             </Pressable>
@@ -721,12 +731,12 @@ export default function HomeScreen({ navigation }) {
                   <Pressable
                     key={`${label}-${i}`}
                     onPress={() => navigation.navigate('Metas', { goalId, goalName: label })}
-                    android_ripple={{ color: '#D1FAE5' }}
+                    android_ripple={{ color: '#BBF7D0' }}
                     accessibilityRole="button"
                     accessibilityLabel={`Abrir meta ${label}`}
                     style={({ pressed }) => ([
                       { marginBottom: 12, borderRadius: 8 },
-                      pressed && { opacity: 0.96, backgroundColor: '#ECFDF5', padding: 4 },
+                      pressed && { opacity: 0.96, backgroundColor: '#ECFDF5', padding: 4, transform: [{ scale: 0.985 }, { translateY: 1 }] },
                     ])}
                     hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                   >
@@ -787,7 +797,7 @@ export default function HomeScreen({ navigation }) {
                     ])}
                     hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                   >
-                    <Ionicons name={pickCategoryIcon(p.name)} size={14} color={'#FFFFFF'} />
+                    <Ionicons name={(categoryStyleByName[p.name]?.icon) || 'pricetag-outline'} size={14} color={'#FFFFFF'} />
                     <Text style={{ marginLeft: 6, color: '#FFFFFF', fontFamily: 'Poppins_400Regular' }}>{p.name}</Text>
                   </Pressable>
                 ))}
@@ -795,9 +805,9 @@ export default function HomeScreen({ navigation }) {
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingLeft: 12 }}>
                 <Pressable
                   onPress={() => navigation.navigate('Itens')}
-                  android_ripple={{ color: '#D1FAE5' }}
+                  android_ripple={{ color: '#BBF7D0' }}
                   accessibilityRole="button"
-                  style={({ pressed }) => ([ pressed && { opacity: 0.95, transform: [{ scale: 0.97 }] } ])}
+                  style={({ pressed }) => ([ pressed && { opacity: 0.95, transform: [{ scale: 0.97 }, { translateY: 1 }] } ])}
                   hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                 >
                 <PieChart
@@ -857,7 +867,7 @@ export default function HomeScreen({ navigation }) {
                     ])}
                     hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                   >
-                    <Ionicons name={pickCategoryIcon(p.name)} size={14} color={'#FFFFFF'} />
+                    <Ionicons name={(categoryStyleByName[p.name]?.icon) || 'pricetag-outline'} size={14} color={'#FFFFFF'} />
                     <Text style={{ marginLeft: 6, color: '#FFFFFF', fontFamily: 'Poppins_400Regular' }}>{p.name}</Text>
                   </Pressable>
                 ))}
@@ -865,9 +875,9 @@ export default function HomeScreen({ navigation }) {
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingLeft: 12 }}>
                 <Pressable
                   onPress={() => navigation.navigate('Itens')}
-                  android_ripple={{ color: '#D1FAE5' }}
+                  android_ripple={{ color: '#BBF7D0' }}
                   accessibilityRole="button"
-                  style={({ pressed }) => ([ pressed && { opacity: 0.95, transform: [{ scale: 0.97 }] } ])}
+                  style={({ pressed }) => ([ pressed && { opacity: 0.95, transform: [{ scale: 0.97 }, { translateY: 1 }] } ])}
                   hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                 >
                 <PieChart
@@ -927,7 +937,7 @@ export default function HomeScreen({ navigation }) {
                 .map((item, idx) => {
                   const catName = catMap[String(item?.categoria)] || 'Outros';
                   const color = categoryColorMap[catName] || colors.green;
-                  const icon = pickCategoryIcon(catName);
+                  const icon = (categoryStyleByName[catName]?.icon) || 'pricetag-outline';
                   return (
                     <Pressable
                       key={item.id || idx}
