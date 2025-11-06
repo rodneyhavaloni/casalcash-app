@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
   card: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFFFFF', // alinhado com outras telas que usam cards brancos sobre fundo geral
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,

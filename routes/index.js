@@ -89,7 +89,7 @@ function Tabs() {
         tabBarIcon: ({ color, size }) => {
           const icons = {
             Home: 'home',
-            Itens: 'list',
+            Despesas: 'card-outline',
             Novo: 'add',
             Metas: 'trophy',
             Config: 'settings',
@@ -99,7 +99,7 @@ function Tabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Itens" component={ItemListScreen} />
+    <Tab.Screen name="Despesas" component={ItemListScreen} options={{ tabBarLabel: 'Despesas' }} />
       <Tab.Screen
         name="Novo"
         component={EmptyScreen}
@@ -157,7 +157,7 @@ export default function Routes({ session }) {
             <Stack.Screen name="CreateChooser" component={CreateChooserScreen} options={{ headerShown: false }} />
             <Stack.Screen name="CreateGoals" component={CreateGoalsScreen} options={{ headerShown: false }} />
             <Stack.Screen name="CreateCategory" component={CreateCategoryScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="ItemDetail" component={ItemDetailScreen} options={{ headerShown: true, title: 'Detalhes' }} />
+            <Stack.Screen name="ItemDetail" component={ItemDetailScreen} options={{ headerShown: false }} />
             <Stack.Screen name="DebtProjection" component={DebtProjectionScreen} options={{ headerShown: true, title: 'Projeção de Dívidas' }} />
             <Stack.Screen name="GoalsDashboard" component={GoalsDashboardScreen} options={{ headerShown: true, title: 'Dashboard de Metas' }} />
           </>
